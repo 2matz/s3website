@@ -3,7 +3,7 @@
 
   "Mappings" : {
     "RegionMap" : {
-      "us-east-1"      : { "s3BucketDomain" : ".s3.amazonaws.com" },
+      "us-east-1"      : { "s3BucketDomain" : "us-east-1.amazonaws.com" },
       "us-west-1"      : { "s3BucketDomain" : "us-west-1.amazonaws.com" },
       "us-west-2"      : { "s3BucketDomain" : "us-west-2.amazonaws.com" },
       "eu-west-1"      : { "s3BucketDomain" : "eu-west-1.amazonaws.com" },
