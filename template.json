@@ -1,0 +1,96 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Mappings" : {
+    "RegionMap" : {
+      "us-east-1"      : { "s3BucketDomain" : ".s3.amazonaws.com" },
+      "us-west-1"      : { "s3BucketDomain" : "us-west-1.amazonaws.com" },
+      "us-west-2"      : { "s3BucketDomain" : "us-west-2.amazonaws.com" },
+      "eu-west-1"      : { "s3BucketDomain" : "eu-west-1.amazonaws.com" },
+      "sa-east-1"      : { "s3BucketDomain" : "sa-east-1.amazonaws.com" },
+      "cu-north-1"     : { "s3BucketDomain" : "cu-north-1.amazonaws.com" },
+      "ap-northeast-1" : { "s3BucketDomain" : "ap-northeast-1.amazonaws.com" },
+      "ap-southeast-1" : { "s3BucketDomain" : "ap-southeast-1.amazonaws.com" },
+      "ap-southeast-2" : { "s3BucketDomain" : "ap-southeast-2.amazonaws.com" }
+    }
+  },
+
+  "Parameters" : {
+    "FQDN" : {
+      "Type" : "String",
+      "Description" : "The DNS name of service FQDN"
+    },
+    "WebsiteHostedZone" : {
+      "Type" : "String",
+      "Description" : "Route53 hosted zone"
+    },
+    "LogBucket" : {
+      "Type" : "String",
+      "Description" : "Access log bucket"
+    }
+  },
+
+  "Resources" : {
+    "HostedZone" : {
+      "Type" : "AWS::Route53::RecordSet",
+      "Properties" : {
+        "HostedZoneName" : { "Fn::Join" : [ "", [{"Ref" : "WebsiteHostedZone"}, "." ]]},
+        "Name" : { "Fn::Join" : [ "", [{"Ref" : "FQDN"}, "." ]]},
+        "Type" : "CNAME",
+        "TTL" : "60",
+        "ResourceRecords" : [{ "Fn::Join" : [ "", [{ "Ref" : "FQDN" }, ".s3-website-", { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, "s3BucketDomain" ] }]]}]
+      }
+    },
+    "S3BucketForWebsite" : {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+        "AccessControl" : "PublicRead",
+        "BucketName" : { "Ref" : "FQDN" },
+        "WebsiteConfiguration" : {
+          "ErrorDocument" : "error.html",
+          "IndexDocument" : "index.html"
+        }, 
+        "LoggingConfiguration" : {
+          "DestinationBucketName" : { "Ref" : "LogBucket" },
+          "LogFilePrefix" : { "Fn::Join" : [ "", [{ "Ref" : "FQDN" }, "/" ]]} 
+        }
+      }
+    },
+    "BucketPolicyForWebsite" : {
+      "Type" : "AWS::S3::BucketPolicy",
+      "Properties" : {
+        "Bucket" : { "Ref" : "S3BucketForWebsite" },
+        "PolicyDocument" : {
+          "Id" : "PublicRead",
+          "Version": "2012-10-17",
+          "Statement" : [ {
+            "Sid" : "ReadAccess",
+            "Action" : [ "s3:GetObject" ],
+            "Effect" : "Allow",
+            "Resource" : { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "S3BucketForWebsite" } , "/*" ]]},
+            "Principal" : "*"
+          } ]
+        }
+      }
+    },
+    "S3BucketForLog" : {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+        "AccessControl" : "LogDeliveryWrite",
+        "BucketName" : { "Ref" : "LogBucket" }
+      },
+      "DeletionPolicy" : "Retain"
+    }
+  },
+
+  "Outputs" : {
+    "BucketName" : {
+      "Value" : { "Ref" : "S3BucketForWebsite" },
+      "Description" : "Name of S3 bucket to hold website content"
+    },
+    "WebsiteURL" : {
+    "Value" : { "Fn::GetAtt" : [ "S3BucketForWebsite", "WebsiteURL" ] },
+      "Description" : "URL for website hosted on S3"
+    }
+  }
+}
