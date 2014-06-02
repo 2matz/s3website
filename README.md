@@ -29,9 +29,9 @@ First, Create Route53 HostedZone before create stack cause.
 ** CloudFormation can't create Route53 HostedZone
 
 ```
-aws route53 create-hosted-zone\
-    --name example.com\
-    --caller-reference FQDN-YYYY-MM-DD\
+aws route53 create-hosted-zone \
+    --name example.com \
+    --caller-reference FQDN-YYYY-MM-DD \
     --profile example
 ```
 ```
@@ -63,13 +63,13 @@ aws route53 create-hosted-zone\
 Second, Create CloudFormation stack.
 
 ```
-aws cloudformation create-stack\
-    --stack-name example\
-    --parameters\
-        ParameterKey=FQDN,ParameterValue="www.example.com"\
-        ParameterKey=WebsiteHostedZone,ParameterValue="example.com"\
-        ParameterKey=LogBucket,ParameterValue="example-log"\
-    --template-body file:////path//to//template.json\
+aws cloudformation create-stack \
+    --stack-name example \
+    --parameters \
+        ParameterKey=FQDN,ParameterValue="www.example.com" \
+        ParameterKey=WebsiteHostedZone,ParameterValue="example.com" \
+        ParameterKey=LogBucket,ParameterValue="example-log" \
+    --template-body file:////path//to//template.json \
     --profile example
 ```
 
@@ -77,7 +77,7 @@ Let's access to http://www.example.com
 
 ## Template validation
 ```
-aws cloudformation validate-template\
-    --template-body file:////path//to//template.json\
+aws cloudformation validate-template \
+    --template-body file:////path//to//template.json \
     --profile example
 ```
